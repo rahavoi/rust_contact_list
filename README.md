@@ -15,7 +15,7 @@ To run the functionality demo, build the application with `cargo build` and run 
 
 See unit tests for more examples.
 
-Example:
+Demo run example:
 
 ```
 ./target/debug/contact_list ./samples/example.json ./samples/example_output.json
