@@ -1,4 +1,7 @@
 # rust_contact_list
+
+TODO: ADD Interactivity
+
 A small CLI application demonstrating basic functionality of a Contact List service.
 Features:
 * serializing/deserializing contact lists from/to json files
