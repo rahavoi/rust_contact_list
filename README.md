@@ -18,6 +18,5 @@ See unit tests for more examples.
 Demo run example:
 
 ```
-cargo build
-./target/debug/contact_list ./samples/example.json ./samples/example_output.json
+cargo build & ./target/debug/contact_list ./samples/example.json ./samples/example_output.json
 ```
