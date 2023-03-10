@@ -1,0 +1,22 @@
+[
+    {
+        "name": "Ali",
+        "phone": "+12223334444",
+        "email": "ali@company.com"
+    },
+    {
+        "name": "Alice",
+        "phone": "000-000-0001",
+        "email": "alice@anothercompany.com"
+    },
+    {
+        "name": "Mike",
+        "phone": "+12223334444",
+        "email": "mike@company.com"
+    },
+    {
+        "name": "Tester",
+        "phone": "333-444-2222",
+        "email": "test@company.com"
+    }
+]
