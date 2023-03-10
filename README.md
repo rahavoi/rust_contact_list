@@ -7,7 +7,7 @@ Features:
 * pagination
 
 Implementation details (main data structures)
-* Internally Contact List application is using BTreeMap for fast pagination, inserts, deletes and edits. Additionally, it uses Tries for faster prefix-based lookups. 
+* Internally Contact List application is using BTreeMap for faster pagination, inserts, deletes and edits. Additionally, it uses Tries for prefix-based lookups. 
 
 
 Usage:
