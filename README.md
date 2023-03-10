@@ -11,7 +11,9 @@ Implementation details (main data structures)
 
 
 Usage:
-To run the functionality demo, build the application with `cargo build` and run the resulting binary providing 2 arguments: 1st argument is path to the initial contact list dataset in json format (see samples dir for examples of valid datasets) and 2nd argument is path to the resulting output file (will be produced by the program in the end of the demo).
+To run the functionality demo, build the application with `cargo build` and run the resulting binary providing 2 arguments: 1st argument is path to the initial contact list dataset in json format (see samples dir for examples of valid datasets) and 2nd argument is path to the resulting output file (will be produced by the program at the end of the demo run).
+
+See unit tests for more examples.
 
 Example:
 
