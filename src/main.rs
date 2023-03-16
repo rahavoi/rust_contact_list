@@ -1,7 +1,7 @@
-use crate::contact_list_app::contact_list_app::{ContactDetails, ContactList};
 use std::{env};
+use crate::contact_list::{ContactDetails, ContactList, ContactListService};
 
-mod contact_list_app;
+mod contact_list;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -34,7 +34,7 @@ fn run_demo(cl : &mut ContactList){
 
     let new_user_name = "Tester".to_string();
     println!("\nLets add a new user {} into our contacts list..", new_user_name);
-    cl.insert(ContactDetails {
+    cl.insert(&ContactDetails {
         name : new_user_name,
         email : "test@company.com".to_string(),
         phone : "333-444-2222".to_string(),
@@ -42,7 +42,7 @@ fn run_demo(cl : &mut ContactList){
 
     let edit_user_name = "Alice".to_string();
     println!("Add edit user {}..", edit_user_name);
-    cl.edit(ContactDetails {
+    cl.edit(&ContactDetails {
         name : edit_user_name,
         email : "alice@anothercompany.com".to_string(),
         phone : "000-000-0001".to_string()
