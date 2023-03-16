@@ -14,7 +14,7 @@ pub trait ContactListService {
     fn get_all(&mut self) -> Vec<ContactDetails>;
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct ContactDetails {
     pub name : String,
     pub email : String,
@@ -27,13 +27,11 @@ impl ContactDetails {
     }
 }
 
-#[derive(Debug)]
 struct TrieNode {
     child : HashMap<char, TrieNode>,
     contact_details: Option<ContactDetails>,
 }
 
-#[derive(Debug)]
 pub struct ContactList {
     contacts : BTreeMap<String, ContactDetails>,
     root : TrieNode,
@@ -319,8 +317,7 @@ mod tests {
 
         let result = ctx.contact_list.get_contacts(2);
         assert!(result.is_empty(),
-                "If outset is beyond the contact list, empty dataset must be returned");
-
+                "If offset is beyond the contact list, empty dataset must be returned");
 
         let new_contacts = vec![
             ContactDetails {
