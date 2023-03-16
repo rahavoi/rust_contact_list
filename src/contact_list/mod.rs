@@ -33,12 +33,6 @@ struct TrieNode {
     contact_details: Option<ContactDetails>,
 }
 
-impl TrieNode {
-    fn get_child(&mut self) -> &mut HashMap<char, TrieNode> {
-        &mut self.child
-    }
-}
-
 #[derive(Debug)]
 pub struct ContactList {
     contacts : BTreeMap<String, ContactDetails>,
@@ -102,8 +96,7 @@ impl ContactListService for ContactList {
         let mut cur = &mut self.root;
 
         for (i,c) in name.chars().enumerate() {
-            let map = cur.get_child();
-            match map.get_mut(&c) {
+            match cur.child.get_mut(&c) {
                 Some(child) => {
                     cur = child;
                     if i == name.len() - 1 && cur.contact_details.is_some() {
@@ -131,7 +124,7 @@ impl ContactListService for ContactList {
         let mut cur = &mut self.root;
 
         for (i,c) in contact.chars().enumerate() {
-            cur = cur.get_child().entry(c).or_insert_with(|| TrieNode {
+            cur = cur.child.entry(c).or_insert_with(|| TrieNode {
                 child: HashMap::new(),
                 contact_details : None
             });
@@ -177,7 +170,7 @@ fn get_all_contacts(start : &mut TrieNode, container : &mut Vec<ContactDetails>)
         _ => {}
     }
 
-    start.get_child().iter_mut()
+    start.child.iter_mut()
         .sorted_by_key(|x| x.0)
         .for_each(|x| get_all_contacts(x.1, container));
 }
