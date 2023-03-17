@@ -4,17 +4,18 @@ use itertools::Itertools;
 use json::parse;
 
 pub trait ContactListService {
-    fn save_to_file(&mut self, path: &String);
+    fn save_to_file(&self, path: &String);
     fn read_from_file(path : &String) -> ContactList;
-    fn get_contacts(&mut self, offset : i32) -> Vec<&ContactDetails>;
+    fn get_contacts(&self, offset : i32) -> Vec<&ContactDetails>;
+    fn find(&self, query: &String) -> Vec<&ContactDetails>;
+    fn get_all(&self) -> Vec<&ContactDetails>;
+
     fn delete(&mut self, name : &String);
     fn edit(&mut self, contact_details : &ContactDetails);
     fn insert(&mut self, contact_details : &ContactDetails);
-    fn find(&mut self, query: &String) -> Vec<ContactDetails>;
-    fn get_all(&mut self) -> Vec<ContactDetails>;
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, Debug, PartialEq)]
 pub struct ContactDetails {
     pub name : String,
     pub email : String,
@@ -47,10 +48,49 @@ impl ContactList {
             }
         }
     }
+
+    fn get_all_contacts(start: &TrieNode) -> Vec<&ContactDetails> {
+        let mut result : Vec<&ContactDetails> = Vec::new();
+        let mut q = Vec::new();
+        q.push(start);
+
+        while !q.is_empty() {
+            let cur = q.pop().unwrap();
+
+            match &cur.contact_details {
+                Some(cd) => result.push(&cd),
+                _ => {}
+            }
+
+            cur.child.iter()
+                .sorted_by_key(|x| x.0)
+                .for_each(|x| q.push(x.1));
+        }
+
+        result
+    }
+
+    fn parse_input(path: &String) -> Vec<ContactDetails>{
+        let file_contents =
+            fs::read_to_string(path).expect("Unable to read file");
+        let parsed = parse(&file_contents).unwrap();
+
+        let mut result = Vec::new();
+
+        for i in 0 .. parsed.len() {
+            result.push(ContactDetails {
+                name : parsed[i]["name"].to_string(),
+                phone : parsed[i]["phone"].to_string(),
+                email : parsed[i]["email"].to_string(),
+            })
+        }
+
+        return result;
+    }
 }
 
 impl ContactListService for ContactList {
-    fn save_to_file(&mut self, path: &String) {
+    fn save_to_file(&self, path: &String) {
         let mut data = json::JsonValue::new_array();
 
         self.get_all().iter().for_each(|c| {
@@ -68,12 +108,12 @@ impl ContactListService for ContactList {
 
     fn read_from_file(path : &String) -> ContactList {
         let mut cl = ContactList::new();
-        parse_input(&path).iter().for_each(|c| cl.insert(&c));
+        ContactList::parse_input(&path).iter().for_each(|c| cl.insert(&c));
 
         cl
     }
 
-    fn get_contacts(&mut self, offset : i32) -> Vec<&ContactDetails> {
+    fn get_contacts(&self, offset : i32) -> Vec<&ContactDetails> {
         let mut result = Vec::new();
 
         let keys = self.contacts.keys().collect::<Vec<&String>>();
@@ -88,11 +128,32 @@ impl ContactListService for ContactList {
         result
     }
 
+    fn find(&self, query: &String) -> Vec<&ContactDetails>{
+        let mut cur = &self.root;
+
+        //Getting to the end of the prefix first:
+        for c in query.chars() {
+            match cur.child.get(&c) {
+                Some(child) => {
+                    cur = child;
+                }
+                None => {
+                    return Vec::new();
+                }
+            }
+        }
+
+        ContactList::get_all_contacts(cur)
+    }
+
+    fn get_all(&self) -> Vec<&ContactDetails> {
+        ContactList::get_all_contacts(&self.root)
+    }
+
     fn delete(&mut self, name : &String){
         self.contacts.remove(name);
 
         let mut cur = &mut self.root;
-
         for (i,c) in name.chars().enumerate() {
             match cur.child.get_mut(&c) {
                 Some(child) => {
@@ -132,63 +193,6 @@ impl ContactListService for ContactList {
             }
         }
     }
-
-    fn find(&mut self, query: &String) -> Vec<ContactDetails>{
-        let mut cur = &mut self.root;
-        let mut container = Vec::new();
-
-        //Getting to the end of the prefix first:
-        for c in query.chars() {
-            match cur.child.get_mut(&c) {
-                Some(child) => {
-                    cur = child;
-                }
-                None => {
-                    return container;
-                }
-            }
-        }
-
-        get_all_contacts(cur, &mut container);
-        container
-    }
-
-    fn get_all(&mut self) -> Vec<ContactDetails> {
-        let mut result = Vec::new();
-        get_all_contacts(&mut self.root, &mut result);
-        result
-    }
-
-
-}
-
-fn get_all_contacts(start : &mut TrieNode, container : &mut Vec<ContactDetails>){
-    match &start.contact_details {
-        Some(cd) => container.push(cd.clone()),
-        _ => {}
-    }
-
-    start.child.iter_mut()
-        .sorted_by_key(|x| x.0)
-        .for_each(|x| get_all_contacts(x.1, container));
-}
-
-fn parse_input(path: &String) -> Vec<ContactDetails>{
-    let file_contents =
-        fs::read_to_string(path).expect("Unable to read file");
-    let parsed = parse(&file_contents).unwrap();
-
-    let mut result = Vec::new();
-
-    for i in 0 .. parsed.len() {
-        result.push(ContactDetails {
-            name : parsed[i]["name"].to_string(),
-            phone : parsed[i]["phone"].to_string(),
-            email : parsed[i]["email"].to_string(),
-        })
-    }
-
-    return result;
 }
 
 #[cfg(test)]
@@ -222,7 +226,7 @@ mod tests {
 
     #[test]
     fn test_search() {
-        let mut ctx = setup();
+        let ctx = setup();
 
         let contacts = ctx.contact_list.get_all();
 
@@ -250,6 +254,7 @@ mod tests {
             email: email.clone(),
             phone: phone.clone(),
         });
+
         let search_result = ctx.contact_list.find(&String::from("Illi"));
 
         assert_eq!(3, ctx.contact_list.get_all().len(),
