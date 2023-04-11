@@ -13,7 +13,6 @@ pub struct QueryParams {
     offset: Option<i32>,
 }
 
-//curl  http://localhost:8080/contacts/all
 #[get("/contacts/all")]
 pub async fn get_all_contacts(data : web::Data<AppState>) -> impl Responder {
     let clones : Vec<ContactDetails> = clone(data.contact_list.lock().unwrap().get_all());
