@@ -1,63 +1,38 @@
-use std::{env};
-use crate::contact_list::{ContactDetails, ContactList, ContactListService};
+use actix_web::{web, App, HttpServer};
+use std::sync::Mutex;
+use crate::contact_list::{ContactList, ContactListService};
+use crate::controllers::{add_contact, AppState, delete_contact, edit_contact, get_all_contacts, get_contacts};
 
 mod contact_list;
+mod controllers;
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 3 {
-        eprintln!("Please provide a path to JSON file with initial set of contacts as 1st arg!");
-        eprintln!("Please provide a path to output JSON file as 2nd arg!");
-        return;
-    }
+#[actix_web::main]
+async fn main() -> std::io::Result<()>{
 
-    let input_file = &args[1];
-    let output_file = &args[2];
-    let mut cl = ContactList::read_from_file(input_file);
+    //#After pulling my hair for half an hour trying to understand why the state of my app is not consistent
+    //(after inserting a bunch of test items, GET kept giving me different results back!)
+    // I found this in the actix-web documentation:
+    //State initialized inside the closure passed to HttpServer::new is local to the worker thread and may become de-synced if modified.
+    //To achieve globally shared state, it must be created outside of the closure passed to HttpServer::new and moved/cloned in.
 
-    run_demo(&mut cl);
-    cl.save_to_file(output_file);
+    //#mind-blowing!
 
-    println!("\n (Updated contact list has been saved to {})", output_file)
-}
-
-//TODO: make this interactive - it'll be more fun.
-fn run_demo(cl : &mut ContactList){
-    let contacts = cl.get_all();
-
-    println!("Initial dataset contains {} contacts: ", contacts.len());
-    contacts.iter().for_each(|c| c.print());
-
-    let query = "Ali".to_string();
-    println!("\nLets find all users starting with : {}", query);
-    cl.find(&query).iter().for_each(|c| c.print());
-
-    let new_user_name = "Tester".to_string();
-    println!("\nLets add a new user {} into our contacts list..", new_user_name);
-    cl.insert(&ContactDetails {
-        name : new_user_name,
-        email : "test@company.com".to_string(),
-        phone : "333-444-2222".to_string(),
+    let data = web::Data::new(AppState {
+        app_name: String::from("Contact List"),
+        contact_list : Mutex::new(ContactList::read_from_file(&String::from("/Users/irahavoi/IdeaProjects/contact_list/samples/example.json"))),
     });
 
-    let edit_user_name = "Alice".to_string();
-    println!("Add edit user {}..", edit_user_name);
-    cl.edit(&ContactDetails {
-        name : edit_user_name,
-        email : "alice@anothercompany.com".to_string(),
-        phone : "000-000-0001".to_string()
-    });
-
-
-    let user_name_to_delete = "Bob".to_string();
-    println!("And delete user {}..", user_name_to_delete);
-    cl.delete(&user_name_to_delete);
-
-    println!("\nUpdated contact list: ");
-    cl.get_all().iter().for_each(|c| c.print());
-
-    println!("\nLet's fetch some contacts by setting offset to 1: ");
-    cl.get_contacts(1).iter().for_each(|c| c.print());
-
-    println!("\nThat's it folks!");
+    HttpServer::new(move || {
+        App::new()
+            .app_data(data.clone())
+            .service(get_contacts)
+            .service(get_all_contacts)
+            .service(add_contact)
+            .service(edit_contact)
+            .service(web::resource("/contacts/{name}")
+                         .route(web::delete().to(delete_contact)))
+    })
+        .bind(("127.0.0.1", 8080))?
+        .run()
+        .await
 }

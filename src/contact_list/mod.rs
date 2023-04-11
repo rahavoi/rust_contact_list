@@ -2,6 +2,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use itertools::Itertools;
 use json::parse;
+use serde::{Deserialize, Serialize};
 
 pub trait ContactListService {
     fn save_to_file(&self, path: &String);
@@ -15,17 +16,11 @@ pub trait ContactListService {
     fn insert(&mut self, contact_details : &ContactDetails);
 }
 
-#[derive(Clone, Eq, Debug, PartialEq)]
+#[derive(Clone, Eq, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ContactDetails {
     pub name : String,
     pub email : String,
     pub phone : String
-}
-
-impl ContactDetails {
-    pub fn print(&self){
-        println!("{}: {}, {}", self.name, self.phone, self.email)
-    }
 }
 
 struct TrieNode {
