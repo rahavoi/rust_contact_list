@@ -14,18 +14,23 @@ The server starts on port 8080.
 Command examples:
 
 Get ALL contacts:
+
 curl  http://localhost:8080/contacts/all
 
 Get paginated contacts with the given offset:
+
 curl http://localhost:8080/contacts?offset=3
 
 ADD contact:
+
 curl -d '{"name" : "Illia", "phone" : "1233444455", "email" : "illia@company.com"}' -H "Content-Type: application/json" -X POST http://localhost:8080/contacts
 
 EDIT contact:
+
 curl -d '{"name" : "Illia", "phone" : "1233444455", "email" : "illia@company.com"}' -H "Content-Type: application/json" -X PUT http://localhost:8080/contacts
 
 DELETE contact:
+
 curl -X DELETE http://localhost:8080/contacts/Alice
 
 
